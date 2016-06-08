@@ -1,2 +1,0 @@
-# ShitNStuff
-Some stuff
