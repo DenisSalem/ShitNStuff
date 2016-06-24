@@ -11,6 +11,6 @@ typedef struct _PIXEL
      unsigned char Alpha;
 } PIXEL;
 
-int writePng( PIXEL ** matrix, int width, int height); 
+int writePng( PIXEL ** matrix, int width, int height, const char * filename); 
 
 #endif

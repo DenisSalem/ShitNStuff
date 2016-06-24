@@ -4,7 +4,7 @@
 #include "png.hpp"
 #include <png.h>
 
-int writePng( PIXEL ** matrix, int width, int height) { 
+int writePng( PIXEL ** matrix, int width, int height, const char * filename) { 
         png_structp     png_ptr;
         png_infop       info_ptr;
         png_bytep * row_pointers;
@@ -12,7 +12,7 @@ int writePng( PIXEL ** matrix, int width, int height) {
 
 
         /* create file */
-        FILE *fp = fopen("terrain.png", "wb");
+        FILE *fp = fopen(filename, "wb");
         if (!fp)
                 //abort_("[write_png_file] File %s could not be opened for writing", "decoded.png");
 		return -1;
