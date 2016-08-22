@@ -11,19 +11,81 @@ class processor():
         self.dictionnary        = dict()
         self.functions		= dict()
         self.functions["Get"] = self.Get
+        self.functions["For"] = self.For
+        self.functions["RecursiveFor"] = self.RecursiveFor
+
+    def SetFunction(self, key, function):
+        self.functions[key] = function
+
+    def DelFunction(self, key):
+        try:
+            del self.functions[key]
+        except:
+            pass
+
+    def DelValue(self, key):
+        try:
+            del self.dictionnary[key]
+        except:
+            pass
 
     def SetWholeDictionnary(self, dictionnary):
-        self.dictionnary = dictionnary
+        for key in dictionnary:
+            self.dictionnary[key] = dictionnary[key]
 
     def Set(self, symbol, value):
-       self.dictionnary[symbol] = str(value)
+       self.dictionnary[symbol] = value
 
     def Get(self, symbol):
         try:
             return self.dictionnary[symbol[0]]
-        except:
-            return ""
-        
+        except Exception as e:
+            return str(e)
+
+    def For(self, argv):
+        outputString = str()
+        try:
+            for Item in self.dictionnary[argv[0]]:
+                outputString += argv[1].format(Item) + argv[2]
+
+            return outputString[:-len(argv[2])]
+        except Exception as e:
+            return str(e)
+
+    def _RecursiveFor(self, openString, content, separator,closeString, nodes):
+        outputString = openString
+        try:
+            for Key in nodes.keys():
+                variables = dict()
+                for key in nodes[Key]:
+                    if key[:2] == '__':
+                        variables[key[2:]] = nodes[Key][key]
+                variables["item"] = Key
+                if nodes[Key]["_nodes"] == dict():
+                    outputString += content.format(variables) + separator
+
+                else:
+                    outputString += content.format(variables) + self._RecursiveFor(openString, content, separator, closeString, nodes[Key]["_nodes"])
+        except Exception as e:
+            return str(e)
+
+        return outputString + closeString
+
+    def RecursiveFor(self, argv):
+        outputString = str()
+        try:
+            outputString += self._RecursiveFor(
+                argv[1],
+                argv[2],
+                argv[3],
+                argv[4],
+                self.dictionnary[argv[0]]["_nodes"]
+            )
+            return outputString
+        except Exception as e:
+            raise
+            return str()
+
     def parse(self, string,escape=False):
         closeSymbolPos	= list()
         openSymbolPos	= list()
@@ -37,7 +99,7 @@ class processor():
             elif i + len(self.closeSymbol) <= len(string) and string[i:i+len(self.closeSymbol)] == self.closeSymbol:
                 closeSymbolPos.append(i)
 
-            if len(closeSymbolPos) == len(openSymbolPos) and len(closeSymbolPos) != 0 and len(openSymbolPos) != 0:
+            if len(closeSymbolPos) <= len(openSymbolPos) and len(closeSymbolPos) != 0 and len(openSymbolPos) != 0:
                 if openSymbolPos[-1] < closeSymbolPos[0]:
                     fields = [field for field in string[openSymbolPos[-1]+2:closeSymbolPos[0]].split(self.separator) if field != '']
                     if fields[0] in self.functions.keys():
