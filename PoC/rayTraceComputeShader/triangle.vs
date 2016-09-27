@@ -1,4 +1,4 @@
-#version 440
+#version 430
 
 in vec3 vertex;
 layout(location = 0) in vec2 position;
