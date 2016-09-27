@@ -152,7 +152,7 @@ int main(int argc, char ** argv) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8I);
   glBindTexture(GL_TEXTURE_2D, 0);
   
   glGenBuffers(1, &quadIBO);
@@ -179,15 +179,31 @@ int main(int argc, char ** argv) {
   /* ----- Compute Shader ----- */
   printWorkGroupsCapabilities();
 
+  GLuint computeShaderID;
+  GLuint rayTracerProgramID;
+  char * computeShader;
+
+  GLint Result = GL_FALSE;
+  int InfoLogLength = 1024;
+  char ProgramErrorMessage[1024] = {0};
+  
+  computeShaderID = glCreateShader(GL_COMPUTE_SHADER);
+  
+  loadShader(&computeShader, "raytracer.cs");
+  compileShader(computeShaderID, computeShader);
+  
+  glAttachShader(rayTracerProgramID, computeShaderID);
+  glLinkProgram(rayTracerProgramID);
+  
   /* ----- Vertex shaders and Fragments shaders ----- */
 
   GLuint vertexShaderID;
   GLuint fragmentShaderID;
   GLuint programID;
 
-  GLint Result = GL_FALSE;
-  int InfoLogLength = 1024;
-  char ProgramErrorMessage[1024] = {0};
+  Result = GL_FALSE;
+  InfoLogLength = 1024;
+  ProgramErrorMessage[1024] = {0};
 
   char * vertexShader;
   char * fragmentShader;
@@ -195,8 +211,8 @@ int main(int argc, char ** argv) {
   vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
   fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
   
-  loadShader(&vertexShader, "triangle.vs");
-  loadShader(&fragmentShader, "triangle.fs");
+  loadShader(&vertexShader, "quad.vs");
+  loadShader(&fragmentShader, "quad.fs");
   
   compileShader(vertexShaderID, vertexShader);
   compileShader(fragmentShaderID, fragmentShader);
