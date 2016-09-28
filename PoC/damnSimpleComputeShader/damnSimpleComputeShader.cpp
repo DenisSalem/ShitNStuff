@@ -148,12 +148,12 @@ int main(int argc, char ** argv) {
   glGenTextures(1, &quadTextureID);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, quadTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 640, 480, 0, GL_RGBA, GL_FLOAT, quadTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 640, 480, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
   glBindTexture(GL_TEXTURE_2D, 0);
   
@@ -257,15 +257,24 @@ int main(int argc, char ** argv) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glUseProgram(programID);
-      glBindTexture(GL_TEXTURE_2D, quadTextureID);
-        glBindVertexArray(quadVAO);
-          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIBO);
-            glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (GLvoid *) 0);
-          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-      glBindTexture(GL_TEXTURE_2D, 0);
+    
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIBO);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, quadTextureID);
+    
+    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (GLvoid *) 0);
+            
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(0);
+            
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    
     glUseProgram(0);
     
+
     glfwSwapBuffers(window);
   }
 
