@@ -85,7 +85,7 @@ int main(int argc, char ** argv) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-  window = glfwCreateWindow(640, 480, "Ray Trace with compute shader", NULL, NULL);
+  window = glfwCreateWindow(640, 480, "Damn simple compute shader", NULL, NULL);
   
   if (!window)  {
     exit(-2);
@@ -192,7 +192,7 @@ int main(int argc, char ** argv) {
   
   computeShaderID = glCreateShader(GL_COMPUTE_SHADER);
   
-  loadShader(&computeShader, "raytracer.cs");
+  loadShader(&computeShader, "compute.shader");
   compileShader(computeShaderID, computeShader);
   
   glAttachShader(rayTracerProgramID, computeShaderID);
@@ -215,8 +215,8 @@ int main(int argc, char ** argv) {
   vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
   fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
   
-  loadShader(&vertexShader, "quad.vs");
-  loadShader(&fragmentShader, "quad.fs");
+  loadShader(&vertexShader, "vertex.shader");
+  loadShader(&fragmentShader, "fragment.shader");
   
   compileShader(vertexShaderID, vertexShader);
   compileShader(fragmentShaderID, fragmentShader);
