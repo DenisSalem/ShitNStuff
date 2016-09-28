@@ -1,4 +1,5 @@
 make:
+	rm rayTraceComputeShader -f
 	make rayTraceComputeShader
 
 rayTraceComputeShader:

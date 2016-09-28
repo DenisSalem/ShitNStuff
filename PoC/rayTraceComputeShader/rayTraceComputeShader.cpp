@@ -17,10 +17,11 @@ typedef struct _COORDS_ {
 } CoordinatesSet;
 
 typedef struct _RGB_ {
-  unsigned char Red;
-  unsigned char Green;
-  unsigned char Blue;
-} RGBValues;
+  GLfloat Red;
+  GLfloat Green;
+  GLfloat Blue;
+  GLfloat Alpha;
+} RGBAValues;
 
 void printWorkGroupsCapabilities() {
   int workgroup_count[3];
@@ -98,7 +99,7 @@ int main(int argc, char ** argv) {
   
   /* ----- Quad Context ----- */
 
-  RGBValues * quadTexture = new RGBValues[640*480];
+  RGBAValues * quadTexture = new RGBAValues[640*480];
   CoordinatesSet * quadVertex = new CoordinatesSet[4];
   unsigned short int * quadIndex = new unsigned short int[3];
 
@@ -130,9 +131,10 @@ int main(int argc, char ** argv) {
 
   for(int x=0; x < 640; x++) {
     for(int y=0; y< 480; y++) {
-      quadTexture[x + y * 640].Red = 0xFF;
-      quadTexture[x + y * 640].Green = 0x88;
-      quadTexture[x + y * 640].Blue = 0x00;
+      quadTexture[x + y * 640].Red = 1.0f;
+      quadTexture[x + y * 640].Green = .5f;
+      quadTexture[x + y * 640].Blue = .0f;
+      quadTexture[x + y * 640].Alpha = 1.0f;
     }
   }
 
@@ -146,13 +148,13 @@ int main(int argc, char ** argv) {
   glGenTextures(1, &quadTextureID);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, quadTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, quadTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 640, 480, 0, GL_RGBA, GL_FLOAT, quadTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8I);
+    glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
   glBindTexture(GL_TEXTURE_2D, 0);
   
   glGenBuffers(1, &quadIBO);
@@ -177,6 +179,7 @@ int main(int argc, char ** argv) {
   glBindVertexArray(0);
 
   /* ----- Compute Shader ----- */
+
   printWorkGroupsCapabilities();
 
   GLuint computeShaderID;
@@ -194,6 +197,7 @@ int main(int argc, char ** argv) {
   
   glAttachShader(rayTracerProgramID, computeShaderID);
   glLinkProgram(rayTracerProgramID);
+  glDeleteShader(computeShaderID);
   
   /* ----- Vertex shaders and Fragments shaders ----- */
 
@@ -238,7 +242,18 @@ int main(int argc, char ** argv) {
 
   while(true) {
     usleep(40000);
-    glEnable(GL_CULL_FACE);  
+    glEnable(GL_CULL_FACE);
+    
+    /* ----- Run Compute shader ----- */
+    glUseProgram(rayTracerProgramID);
+      glBindTexture(GL_TEXTURE_2D, quadTextureID);
+        glDispatchCompute(640,480,1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+      glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
+      
+
+    /* ----- Actual render ----- */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glUseProgram(programID);
