@@ -183,7 +183,7 @@ int main(int argc, char ** argv) {
   printWorkGroupsCapabilities();
 
   GLuint computeShaderID;
-  GLuint rayTracerProgramID;
+  GLuint csProgramID;
   char * computeShader;
 
   GLint Result = GL_FALSE;
@@ -195,8 +195,10 @@ int main(int argc, char ** argv) {
   loadShader(&computeShader, "compute.shader");
   compileShader(computeShaderID, computeShader);
   
-  glAttachShader(rayTracerProgramID, computeShaderID);
-  glLinkProgram(rayTracerProgramID);
+  csProgramID = glCreateProgram();
+
+  glAttachShader(csProgramID, computeShaderID);
+  glLinkProgram(csProgramID);
   glDeleteShader(computeShaderID);
   
   /* ----- Vertex shaders and Fragments shaders ----- */
@@ -240,12 +242,17 @@ int main(int argc, char ** argv) {
 
   /* ----- Render loop ----- */
 
+  GLint location; 
+      location = glGetUniformLocation(csProgramID, "img_output"); 
+      if (location == -1){
+        printf("Could not locate uniform location for texture in CS\n");
+        return 0;
+      }
   while(true) {
     usleep(40000);
     glEnable(GL_CULL_FACE);
-    
     /* ----- Run Compute shader ----- */
-    glUseProgram(rayTracerProgramID);
+    glUseProgram(csProgramID);
       glBindTexture(GL_TEXTURE_2D, quadTextureID);
         glDispatchCompute(640,480,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
