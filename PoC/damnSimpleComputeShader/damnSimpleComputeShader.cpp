@@ -148,11 +148,11 @@ int main(int argc, char ** argv) {
   glGenTextures(1, &quadTextureID);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, quadTextureID);
-    glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);  
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 640, 480, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -254,7 +254,7 @@ int main(int argc, char ** argv) {
     /* ----- Run Compute shader ----- */
     glUseProgram(csProgramID);
       glBindTexture(GL_TEXTURE_2D, quadTextureID);
-        glDispatchCompute(640,480,1);
+        glDispatchCompute(40,30,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
       glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
