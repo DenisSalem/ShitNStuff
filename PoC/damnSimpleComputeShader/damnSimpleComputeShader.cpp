@@ -155,6 +155,7 @@ int main(int argc, char ** argv) {
     glGenerateMipmap(GL_TEXTURE_2D);  
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 640, 480, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
   glBindTexture(GL_TEXTURE_2D, 0);
   
   glGenBuffers(1, &quadIBO);
@@ -240,24 +241,21 @@ int main(int argc, char ** argv) {
   if (strlen(ProgramErrorMessage) != 0) 
     std::cout << ProgramErrorMessage << "\n";
 
-  /* ----- Render loop ----- */
 
-  GLint location; 
-      location = glGetUniformLocation(csProgramID, "img_output"); 
-      if (location == -1){
-        printf("Could not locate uniform location for texture in CS\n");
-        return 0;
-      }
-  while(true) {
-    usleep(40000);
-    glEnable(GL_CULL_FACE);
-    /* ----- Run Compute shader ----- */
+  /* ----- Run Compute shader ----- */
+  glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glUseProgram(csProgramID);
       glBindTexture(GL_TEXTURE_2D, quadTextureID);
         glDispatchCompute(40,30,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
       glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+  glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+  /* ----- Render loop ----- */
+  while(true) {
+    usleep(40000);
+    glEnable(GL_CULL_FACE);
       
 
     /* ----- Actual render ----- */
@@ -270,9 +268,11 @@ int main(int argc, char ** argv) {
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, quadTextureID);
+    glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (GLvoid *) 0);
             
+    glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(0);
             
