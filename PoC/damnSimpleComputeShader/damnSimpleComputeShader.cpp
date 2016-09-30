@@ -251,7 +251,7 @@ int main(int argc, char ** argv) {
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
       glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
+  glUseProgram(0);
 
   /* ----- Render loop ----- */
   while(true) {
