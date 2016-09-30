@@ -12,7 +12,7 @@ void main() {
   // gl_LocalInvocationID.xy * gl_WorkGroupID.xy == gl_GlobalInvocationID
   ivec2 coords = ivec2(gl_GlobalInvocationID);
 
-  // Pour mettre en evidence. Les groupes de travaille locaux on dessine un damier.
+  // Pour mettre en evidence. Les groupes de travaille on dessine un damier.
   vec4 pixel;
   if ( ((gl_WorkGroupID.x & 1u) != 1u) != ((gl_WorkGroupID.y & 1u) == 1u)) {
     pixel = vec4(1.0,.5,.0,1.0);
