@@ -16,7 +16,7 @@ typedef struct _COORDS_ {
   GLfloat t;
 } CoordinatesSet;
 
-typedef struct _RGB_ {
+typedef struct _RGBA_ {
   GLfloat Red;
   GLfloat Green;
   GLfloat Blue;
@@ -145,6 +145,7 @@ int main(int argc, char ** argv) {
   GLuint quadVAO;
   GLuint quadTextureID;
 
+  /* Création de la texture et association à une image unit */
   glGenTextures(1, &quadTextureID);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, quadTextureID);
@@ -243,14 +244,14 @@ int main(int argc, char ** argv) {
 
 
   /* ----- Run Compute shader ----- */
-  glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glUseProgram(csProgramID);
-      glBindTexture(GL_TEXTURE_2D, quadTextureID);
+  glUseProgram(csProgramID);
+    glBindTexture(GL_TEXTURE_2D, quadTextureID);
+      glBindImageTexture (0, quadTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(40,30,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-      glBindTexture(GL_TEXTURE_2D, 0);
+      glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
-  glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
   /* ----- Render loop ----- */
   while(true) {
