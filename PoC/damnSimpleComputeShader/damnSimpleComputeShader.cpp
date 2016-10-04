@@ -186,7 +186,7 @@ int main(int argc, char ** argv) {
 
   GLuint computeShaderID;
   GLuint csProgramID;
-  char * computeShader;
+  char * computeShader = 0;
 
   GLint Result = GL_FALSE;
   int InfoLogLength = 1024;
@@ -213,8 +213,8 @@ int main(int argc, char ** argv) {
   InfoLogLength = 1024;
   ProgramErrorMessage[1024] = {0};
 
-  char * vertexShader;
-  char * fragmentShader;
+  char * vertexShader = 0;
+  char * fragmentShader = 0;
 
   vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
   fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
