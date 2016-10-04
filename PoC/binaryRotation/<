@@ -1,0 +1,8 @@
+#include <iostream>
+
+int main(int argc, char **argv) {
+  float original = 0.12345678;
+  std::cout.precision(20);
+  std::cout << original << "\n";
+  return 0;
+}
