@@ -172,12 +172,17 @@ int main(int argc, char ** argv) {
   
   glGenVertexArrays(1, &quadVAO);
   glBindVertexArray(quadVAO);
+  
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIBO);
+	
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-      glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-      glEnableVertexAttribArray(0);
-      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *) (sizeof(GLfloat) * 2));
-      glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(0);
+	
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *) (sizeof(GLfloat) * 2));
+	glEnableVertexAttribArray(1);
+
   glBindVertexArray(0);
 
   /* ----- Compute Shader ----- */
@@ -265,7 +270,6 @@ int main(int argc, char ** argv) {
     glUseProgram(programID);
     
     glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIBO);
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, quadTextureID);
@@ -277,7 +281,6 @@ int main(int argc, char ** argv) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(0);
             
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     
     glUseProgram(0);
