@@ -4,7 +4,7 @@
 #include "dsglMeshes.hpp"
 #include "dsglPng.hpp"
 #include <cmath>
-#define N 8
+#define N 16
 #define EPSILON 0.25
 
 DSGL::Images::rgb32f imgMax(DSGL::Images::rgb8 * img, unsigned int size) {
@@ -39,7 +39,12 @@ int findClosest(DSGL::Images::rgb8 pixel, DSGL::Images::rgb32f * seeds) {
 }
 
 int main(int argc, char ** argv) {
-	DSGL::Images::Png png("2013_-_Denis_Salem_-_CC_By_SA_-_Fernando_Omeara_0x06_720p.png");
+  	if (argc < 2) {
+	  	std::cout << "usage: ./lloydMax <image.png>";
+		return 0;
+	}
+
+	DSGL::Images::Png png(argv[1]);
 
 	DSGL::Images::rgb8 * pixels = (DSGL::Images::rgb8 *) png.rawData;
 

@@ -171,14 +171,20 @@ namespace DSGL {
 		glBindTexture(target, 0);
 	}
 
-	Textures::Textures(GLuint target, GLuint width, GLuint height, GLvoid * rawData) : Textures(target, width, height, rawData, GL_RGBA, GL_FLOAT) {}
+	Textures::Textures(GLenum target, GLuint width, GLuint height, GLvoid * rawData) : Textures(target, width, height, rawData, GL_RGBA, GL_FLOAT, GL_RGBA32F) {}
+	
+	Textures::Textures(GLenum target, GLuint width, GLuint height, GLvoid * rawData, GLenum cpuSideFormat, GLenum cpuSideType) : Textures(target, width, height, rawData, cpuSideFormat, cpuSideType, GL_RGBA32F) {
+	}
 
-	Textures::Textures(GLuint target, GLuint width, GLuint height, GLvoid * rawData, GLenum format, GLenum type) : Textures(target) {
+	Textures::Textures(GLenum target, GLuint width, GLuint height, GLvoid * rawData, GLenum cpuSideFormat, GLenum cpuSideType, GLint gpuSideFormat) : Textures(target) {
 	  	this->width = width;
 		this->height = height;
-		this-> rawData = rawData;
-		this->format = format;
-		this->type = type;
+		this->rawData = rawData;
+		this->cpuSideFormat = cpuSideFormat;
+		this->cpuSideType = cpuSideType;
+		this->gpuSideFormat = gpuSideFormat;
+		this->target = target;
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(target, this->textureID); {
 			glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -189,22 +195,37 @@ namespace DSGL {
 			if( width % 4 != 0) {
 			  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // In case of NPOT width texture, prevent from misalignment shit.
 			}
-			glTexImage2D(target, 0, GL_RGBA32F, this->width, this->height, 0, this->format, this->type, this->rawData);
-			glBindImageTexture (0, this->textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+			if(target == GL_TEXTURE_2D) {
+				glTexImage2D(target, 0, gpuSideFormat, this->width, this->height, 0, cpuSideFormat, cpuSideType, this->rawData);
+			}
+			else if(target == GL_TEXTURE_1D) {
+				glTexImage1D(target, 0, gpuSideFormat, this->width, 0, cpuSideFormat, cpuSideType, this->rawData);
+			}
+			glBindImageTexture (0, this->textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, gpuSideFormat);
 		}
-		glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, gpuSideFormat);
+		glBindTexture(target, 0);
+	}
+
+	Textures::~Textures() {
+		// Must delete texture there...
+		glDeleteTextures(1, &this->textureID);
+		glDeleteTextures(1, &this->normalMapID);
 	}
 
 	void Textures::Bind() {
+		this->Bind(0);
+	}
+
+	void Textures::Bind(GLuint unit) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->textureID);
-		glBindImageTexture (0, this->textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		glBindTexture(this->target, this->textureID);
+		glBindImageTexture(unit, this->textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, gpuSideFormat);
 	}
 
 	void Textures::Unbind() {
-		glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindImageTexture (0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, gpuSideFormat);
+    		glBindTexture(this->target, 0);
 	}
 
 	/* ---- VertexArrayObject ----- */
@@ -322,7 +343,7 @@ namespace DSGL {
 		glDeleteVertexArrays(1,&this->ID);
 	}
 	
-	/* ---- Elements ----- */
+	// ---- Elements ----- //
 	
 	Elements::Elements(GLsizeiptr size, const GLvoid * data) : Elements(size, data, GL_STATIC_DRAW){}
 	
@@ -355,7 +376,7 @@ namespace DSGL {
 		}
 	}
 	
-	/* ---- Shader ----- */
+	// ---- Shader ----- //
 		
 	Shader::Shader(const char * inputShader, GLuint shaderType, int option) {
 		if (inputShader == NULL) {
@@ -365,10 +386,9 @@ namespace DSGL {
 				
 		this->Result = GL_FALSE;
 		
-		/* Create shader */
+		// Create shader //
 
 		this->ID = glCreateShader(shaderType);
-		
 		if (this->ID == 0) {
 			if ((option & 1) == 0) {
 				throw Exception(DSGL_CANNOT_CREATE_SHADER, DSGL_MSG_CANNOT_CREATE_SHADER, inputShader);
@@ -378,17 +398,17 @@ namespace DSGL {
 			}
 		}	
 
-		/* Copy from existing string */
+		// Copy from existing string //
 		if ((option & 1) == 1)  {
 			this->shaderSource = std::string(inputShader);
 		}
 
-		/* Read from file and load into memory */
+		// Read from file and load into memory //
 		else {
 			ReadFromFile(inputShader);
 		}
 
-		/* Read from memory and compile */
+		// Read from memory and compile //
 		const char * shaderSource_ptr = this->shaderSource.c_str();
 		glShaderSource(this->ID, 1, &shaderSource_ptr, NULL);
 		glCompileShader(this->ID);
@@ -437,18 +457,15 @@ namespace DSGL {
 		glDeleteShader(this->ID);
 	}
 
-	/* ComputeShader */
+	// ComputeShader //
 
 	ComputeProgram::ComputeProgram(const char * inputShader, int option) {
 		this->compute = std::make_shared<Shader>(inputShader, GL_COMPUTE_SHADER, option);
-		
 		GLint InfoLogLength = 0;
 		
 		this->ID = glCreateProgram();
 		glAttachShader(this->ID, this->compute->ID);
   		glLinkProgram(this->ID);
-		glDeleteShader(this->compute->ID);
-		
 		glGetProgramiv(this->ID, GL_LINK_STATUS, &this->Result);
 
 		if (!Result) {
@@ -471,11 +488,10 @@ namespace DSGL {
 	ComputeProgram::~ComputeProgram() {
 		if (glIsShader(this->compute->ID)) {
 			glDetachShader(this->ID, this->compute->ID);
-			glDeleteShader(this->compute->ID);
 		}
 		if (glIsProgram(this->ID)) {
 			glDeleteProgram(this->ID);
-		}			
+		}
 	}
 
 	void ComputeProgram::Use() {
@@ -492,7 +508,7 @@ namespace DSGL {
 		}
 	}
 
-	/* ----- PipelineProgram ----- */
+	// ----- PipelineProgram ----- //
 
 	PipelineProgram::PipelineProgram(const char * inputVertexShader, const char * inputFragmentShader) : PipelineProgram(inputVertexShader, NULL, NULL, NULL, inputFragmentShader) {}
 	
@@ -505,20 +521,20 @@ namespace DSGL {
 		
 		GLint InfoLogLength = 0;
 		
-		/* Create program */
+		// Create program //
 		this->ID = glCreateProgram();
 		if (!glIsProgram(this->ID)) {
 			throw Exception(DSGL_CANNOT_CREATE_PROGRAM, "DSGL: Cannot create program");
 		}	
 
-		/* Create shaders */
+		// Create shaders //
 		this->vertex = std::make_shared<Shader>(inputVertexShader, GL_VERTEX_SHADER, DSGL_READ_FROM_FILE);
 		this->tesselationControl = std::make_shared<Shader>(inputTesselationControlShader, GL_TESS_CONTROL_SHADER, DSGL_READ_FROM_FILE);
 		this->tesselationEvaluation = std::make_shared<Shader>(inputTesselationEvaluationShader, GL_TESS_EVALUATION_SHADER, DSGL_READ_FROM_FILE);
 		this->geometry = std::make_shared<Shader>(inputGeometryShader, GL_GEOMETRY_SHADER, DSGL_READ_FROM_FILE);
 		this->fragment = std::make_shared<Shader>(inputFragmentShader, GL_FRAGMENT_SHADER, DSGL_READ_FROM_FILE);
 
-		/* Link and compile */
+		// Link and compile //
 
 		if (glIsShader(this->vertex->ID)) {
 			glAttachShader(this->ID, this->vertex->ID);
@@ -542,7 +558,7 @@ namespace DSGL {
 		
 		glLinkProgram(this->ID);
 		
-		/* Clean shaders */
+		// Clean shaders //
 		Clean(DSGL_CLEAN_SHADERS_ONLY);
 
 		glGetProgramiv(this->ID, GL_LINK_STATUS, &this->Result);
@@ -604,7 +620,7 @@ namespace DSGL {
 		}
 	}
 
-	/* Shader Program */
+	// Shader Program //
 	void ShaderProgram::Uniformui(const char * uniformName, GLuint v0) {
 		GLint loc = glGetUniformLocation(this->ID, uniformName);
 		if (loc != -1) {
@@ -645,7 +661,27 @@ namespace DSGL {
 		}
 	}
 
-	/* ----- Miscellaneous functions ----- */
+	void ShaderProgram::Uniform4fv(const char * uniformName, int size, GLfloat * array) {
+		GLint loc = glGetUniformLocation(this->ID, uniformName);
+		if (loc != -1) {
+			glUniform4fv(loc, size, array);
+		}
+		else {
+		  throw Exception(DSGL_UNIFORM_LOCATION_DOESNT_EXISTS, DSGL_MSG_UNIFORM_LOCATION_DOESNT_EXISTS);
+		}
+	}
+
+	void ShaderProgram::Uniform3fv(const char * uniformName, int size, GLfloat * array) {
+		GLint loc = glGetUniformLocation(this->ID, uniformName);
+		if (loc != -1) {
+			glUniform3fv(loc, size, array);
+		}
+		else {
+		  throw Exception(DSGL_UNIFORM_LOCATION_DOESNT_EXISTS, DSGL_MSG_UNIFORM_LOCATION_DOESNT_EXISTS);
+		}
+	}
+
+	// ----- Miscellaneous functions ----- //
 	
 	int GetFileSize(const char * inputFilePath) {
 		// http://www.cplusplus.com/doc/tutorial/files/
@@ -656,6 +692,11 @@ namespace DSGL {
 		end = inputFile.tellg();
 		inputFile.close();
 		return int(end - begin);
+	}
+
+	unsigned long int GetRandom(int salt) {
+		std::srand(std::time(0));
+		return std::rand()*salt*3.1415;
 	}
 
 	void PrintNicelyWorkGroupsCapabilities() {
